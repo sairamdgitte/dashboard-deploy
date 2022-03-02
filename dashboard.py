@@ -52,8 +52,7 @@ pw = "Sentiment"
 connection = create_db_connection("database.cyg6qupmqicu.ap-southeast-2.rds.amazonaws.com", "admin", pw,
                                   "HTL_SENTIMENT")
 
-print('Hi')
-with open('./data/states_1.json', 'r') as response:
+with urlopen('https://raw.githubusercontent.com/rowanhogan/australian-states/master/states.geojson') as response:
     counties = json.load(response)
 
 state_id_map = {}
@@ -356,8 +355,8 @@ app.layout = dbc.Container([
 
         dbc.Col([
             dbc.Card([
-                dbc.CardHeader(de.Lottie(options=options, width="50%", height="50%", url=url),
-                               style={'borderRadius': '25px 0px 0px 0px',
+                dbc.CardHeader(de.Lottie(options=options, width="20%", url=url),
+                               style={'borderRadius': '25px 0px 0px 0px', 'height':'10%',
                                       'overflow': 'hidden', 'background': '#E8A87C'}),
 
                 dbc.CardBody([
@@ -600,5 +599,5 @@ app.layout = dbc.Container([
 
 if __name__ == '__main__':
 
-    app.run_server(host='0.0.0.0', debug=True, port=80)
+    app.run_server(host='0.0.0.0', debug=True, port=8050)
 
