@@ -1,13 +1,13 @@
-.card {
+/* .card {
     'height': '100%';
     'width': '100%';
     'position': 'relative';
-}
+} */
 
 
 .animate-charcter
 {
-    text-transform: uppercase;
+  text-transform: uppercase;
   background-image: linear-gradient(
     -225deg,
     #231557 0%,
@@ -20,16 +20,86 @@
   background-size: 200% auto;
   color: #fff;
   background-clip: text;
-  text-fill-color: transparent;
+  /* text-fill-color: transparent; */
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   animation: textclip 2s linear infinite;
   display: inline-block;
-      font-size: 190px;
+  font-size: 190px;
 }
 
 @keyframes textclip {
   to {
     background-position: 200% center;
   }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@-webkit-keyframes ticker {
+  0% {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    visibility: visible;
+  }
+  100% {
+    -webkit-transform: translate3d(-100%, 0, 0);
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+@keyframes ticker {
+  0% {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+    visibility: visible;
+  }
+  100% {
+    -webkit-transform: translate3d(-100%, 0, 0);
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+.ticker-wrap {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  overflow: hidden;
+  height: 4rem;
+  background-color: #28195c;
+  padding-left: 100%;
+  box-sizing: content-box;
+  
+}
+.ticker-wrap .ticker {
+  display: flex;
+  height: 4rem;
+  line-height: 4rem;
+  white-space: nowrap;
+  padding-right: 100%;
+  box-sizing: content-box;
+  -webkit-animation-iteration-count: infinite;
+  animation-iteration-count: infinite;
+  -webkit-animation-timing-function: linear;
+  animation-timing-function: linear;
+  -webkit-animation-name: ticker;
+  animation-name: ticker;
+  -webkit-animation-duration: 30s;
+  animation-duration: 30s;
+  
+}
+.ticker-wrap .ticker__item {
+  display: flex;
+  padding: 0 2rem;
+  font-size: 2rem;
+  color: white;
+}
+
+.ticker:hover { animation-play-state: paused; }
+
+
+h1,
+h2,
+p {
+  padding: 0 5%;
 }
