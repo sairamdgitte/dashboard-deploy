@@ -331,21 +331,29 @@ app.layout = dbc.Container([
             dbc.Card([
 
                 dbc.CardBody([
-                    html.H4([
-                         
-                        html.Div([
-                            html.Ul([
-                                html.Li(["Technology"]),
-                                html.Li(["Design"]),
-                                html.Li(["Creativity"]),
-                                html.Li(["Cybernetics"]),
-                                html.Li(["Culture"]),
-                                html.Li(["Collaboration"]),
-                                html.Li(["Hybridity"]),
-                                html.Li(["Transformation"]),
-
-                        ], className="flip8")])],
-                        className="wordCarousel")
+                    html.Ul([
+                        html.Li([
+                            html.P(["Technology"])
+                        ], className="Words-line"),
+                        html.Li([
+                            html.P(["Design"])
+                        ], className="Words-line"),
+                        html.Li([
+                            html.P(["Creativity "])
+                        ], className="Words-line"),
+                        html.Li([
+                            html.P(["Cybernetics"])
+                        ], className="Words-line"),
+                        html.Li([
+                            html.P(["Culture"])
+                        ], className="Words-line"),
+                        html.Li([
+                            html.P(["Collaboration"])
+                        ], className="Words-line"),
+                        html.Li([
+                            html.P(["Hybridity"])
+                        ], className="Words-line")
+                    ], className="Words")
                         
                     
                 ], style={'background-color': '#070914'})
