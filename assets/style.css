@@ -188,77 +188,186 @@
 
 
 
+ /* Carousel */
 
-/*
-** Apply styles to the parent element
-*/
-.Words {
-  margin: 0 auto;
-  padding: 80px 0;
-  font-family: "Source Sans Pro", Helvetica, Arial, sans-serif;
-  font-size: 20px;
-  font-weight: 900;
-  letter-spacing: -2px;
-  text-transform: uppercase;
-  transform: translate3d(0, 0, 0);
-  -webkit-font-smoothing: antialiased;
-  -webkit-font-kerning: normal;
-  -webkit-text-size-adjust: 50%;
-}
-
-/*
-** Apply common styles to each line of text
-*/
-.Words-line {
-  height: 50px;
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:700,400);
+.frame {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+  box-shadow: 1px 2px 10px 0px rgba(0, 0, 0, 0.13);
   overflow: hidden;
+  background: #070914;
+  color: #fff;
+  font-family: "Open Sans", Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.center {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  margin-top: -37.5px;
+}
+
+.carousel {
   position: relative;
+  width: 100%;
+  text-align: left;
+  font-size: 50px;
+  line-height: 75px;
+  height: 75px;
 }
-.Words-line:nth-child(odd) {
-  transform: skew(60deg, -30deg) scaleY(0.66667);
+.carousel .pre {
+  position: absolute;
+  top: 0;
+  right: 54.5%;
+  height: 75px;
+  text-shadow: 2px 2px 2px #41B3A3;
 }
-.Words-line:nth-child(even) {
-  transform: skew(0deg, -30deg) scaleY(1.33333);
+.carousel .change_outer {
+  position: absolute;
+  top: 0;
+  left: 46%;
+  text-align: left;
+  height: 75px;
+  overflow: hidden;
 }
-.Words-line:nth-child(1) {
-  left: 29px;
+.carousel .change_outer .change_inner {
+  position: relative;
+  -webkit-animation: rotate 34s  infinite;
+  animation: rotate 34s  infinite;
 }
-.Words-line:nth-child(2) {
-  left: 58px;
-}
-.Words-line:nth-child(3) {
-  left: 87px;
-}
-.Words-line:nth-child(4) {
-  left: 116px;
-}
-.Words-line:nth-child(5) {
-  left: 145px;
-}
-.Words-line:nth-child(6) {
-  left: 174px;
-}
-.Words-line:nth-child(7) {
-  left: 203px;
-}
-
-/*
-** Fine-grained text styles
-*/
-p {
-  height: 50px;
-  line-height: 45px;
-  padding: 0 10px;
-  transition: all 0.4s ease-in-out;
-  transform: translate3d(0, 0, 0);
-  vertical-align: top;
-  white-space: nowrap;
+.carousel .change_outer .element {
+  display: block;
+  font-weight: 700;
+  text-shadow: 2px 2px 2px #e67e22;
 }
 
-/*
-** The hover interaction
-*/
-.Words:hover p {
-  transform: translate3d(0, -50px, 0);
+.element  {
+  display: inline-block;
+  font-size: 1rem;
+}
+.pre {
+  display: inline-block;
+  font-size: 1rem;
+  color: #41B3A3;
 }
 
+@-webkit-keyframes rotate {
+  0%, 2.5% {
+    transform: translateY(0);
+  }
+  5%, 7.5% {
+    transform: translateY(-75px);
+  }
+  10%, 12.5% {
+    transform: translateY(-150px);
+  }
+  15%, 17.5% {
+    transform: translateY(-225px);
+  }
+  20%, 22.5% {
+    transform: translateY(-300px);
+  }
+  25%, 27.5% {
+    transform: translateY(-375px);
+  }
+  30%, 32.5% {
+    transform: translateY(-450px);
+  }
+  35%, 37.5% {
+    transform: translateY(-525px);
+  }
+  40%, 42.5% {
+    transform: translateY(-600px);
+  }
+  45%, 47.5% {
+    transform: translateY(-675px);
+  }
+  50%, 52.5% {
+    transform: translateY(-750px);
+  }
+  55%, 57.5% {
+    transform: translateY(-825px);
+  }
+  60%, 62.5% {
+    transform: translateY(-900px);
+  }
+  65%, 67.5% {
+    transform: translateY(-975px);
+  }
+  70%, 72.5% {
+    transform: translateY(-1050px);
+  }
+  75%, 77.5% {
+    transform: translateY(-1125px);
+  }
+  80%, 82.5% {
+    transform: translateY(-1200px);
+  }
+  100% {
+    transform: translateY(-1275px);
+  }
+  
+}
+
+@keyframes rotate {
+  0%, 2.5% {
+    transform: translateY(0);
+  }
+  5%, 7.5% {
+    transform: translateY(-75px);
+  }
+  10%, 12.5% {
+    transform: translateY(-150px);
+  }
+  15%, 17.5% {
+    transform: translateY(-225px);
+  }
+  20%, 22.5% {
+    transform: translateY(-300px);
+  }
+  25%, 27.5% {
+    transform: translateY(-375px);
+  }
+  30%, 32.5% {
+    transform: translateY(-450px);
+  }
+  35%, 37.5% {
+    transform: translateY(-525px);
+  }
+  40%, 42.5% {
+    transform: translateY(-600px);
+  }
+  45%, 47.5% {
+    transform: translateY(-675px);
+  }
+  50%, 52.5% {
+    transform: translateY(-750px);
+  }
+  55%, 57.5% {
+    transform: translateY(-825px);
+  }
+  60%, 62.5% {
+    transform: translateY(-900px);
+  }
+  65%, 67.5% {
+    transform: translateY(-975px);
+  }
+  70%, 72.5% {
+    transform: translateY(-1050px);
+  }
+  75%, 77.5% {
+    transform: translateY(-1125px);
+  }
+  80%, 82.5% {
+    transform: translateY(-1200px);
+  }
+  100% {
+    transform: translateY(-1275px);
+  }
+}

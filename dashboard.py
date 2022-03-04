@@ -172,7 +172,7 @@ pos_df = pd.DataFrame(pos_neg_ratios.most_common( )[:30])
 pos_df['freq'] = pos_df[0].apply(
     lambda x: dict(positive_counts.most_common( ))[x] if x in dict(positive_counts.most_common( )) else 0)
 
-stylecloud.gen_stylecloud(' '.join(positive_tweets + negative_tweets + neutral_tweets), colors=['#ecf0f1', '#3498db', '#e74c3c'], size=1024,
+stylecloud.gen_stylecloud(' '.join(positive_tweets + negative_tweets + neutral_tweets), colors=['#41B3A3', '#9d3f54'], size=(1024, 700),
                           background_color='#070914', icon_name='fas fa-hashtag', output_name='./assets/pos_cloud.png')
 
 
@@ -209,7 +209,7 @@ def uni_gram_graph(df, color_name):
                          "freq": "Frequency",
                          "freq": "Frequency"
                      },
-                     height=300
+                     height=200
                      )
 
     bar_fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
@@ -247,7 +247,7 @@ def bigram_graph(df, color_name, sentiment='pos'):
                                 "1": "Frequency",
                                 "1": "Frequency"
                             },
-                            height=300
+                            height=200
                             )
 
     bigram_bar_fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
@@ -331,29 +331,33 @@ app.layout = dbc.Container([
             dbc.Card([
 
                 dbc.CardBody([
-                    html.Ul([
-                        html.Li([
-                            html.P(["Technology"])
-                        ], className="Words-line"),
-                        html.Li([
-                            html.P(["Design"])
-                        ], className="Words-line"),
-                        html.Li([
-                            html.P(["Creativity "])
-                        ], className="Words-line"),
-                        html.Li([
-                            html.P(["Cybernetics"])
-                        ], className="Words-line"),
-                        html.Li([
-                            html.P(["Culture"])
-                        ], className="Words-line"),
-                        html.Li([
-                            html.P(["Collaboration"])
-                        ], className="Words-line"),
-                        html.Li([
-                            html.P(["Hybridity"])
-                        ], className="Words-line")
-                    ], className="Words")
+                    html.Div([
+                        html.Div([
+                            html.Div([
+                                html.Div(["Tweets relate to"], className='pre'),
+                                html.Div([
+                                    html.Div([
+                                        html.Div(['\t medicare'], className='element'),
+                                        html.Div([' health'], className='element'),
+                                        html.Div([' omicron'], className='element'),
+                                        html.Div([' medical'], className='element'),
+                                        html.Div([' medicine'], className='element'),
+                                        html.Div([' vaccine'], className='element'),
+                                        html.Div([' hospital'], className='element'),
+                                        html.Div([' doctor'], className='element'),
+                                        html.Div([' emergency room'], className='element'),
+                                        html.Div([' physician'], className='element'),
+                                        html.Div([' cardiologist'], className='element'),
+                                        html.Div([' mammogram'], className='element'),
+                                        html.Div([' oncologist'], className='element'),
+                                        html.Div([' cancer'], className='element'),
+                                        html.Div([' clinic'], className='element'),
+                                        html.Div([' primary care'], className='element'),
+                                ], className='change_inner')
+                            ], className='change_outer')
+                        ], className='carousel')
+                        ], className='center')
+                    ], className='frame')
                         
                     
                 ], style={'background-color': '#070914'})
@@ -580,7 +584,7 @@ app.layout = dbc.Container([
     
     dbc.Col([
             dbc.Card([
-                dbc.CardBody([
+                
                     dbc.CardHeader([
                         html.H4("What are people talking about?",
                                 style={'padding': '15px', 'borderRadius': '0px 25px 0px 0px',
@@ -591,7 +595,6 @@ app.layout = dbc.Container([
                     dbc.CardImg(src='./assets/pos_cloud.png')
                 ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'})
 
-                ], style={'background-color': '#070914'})
 
             ], style={'background-color': '#070914'})
 
