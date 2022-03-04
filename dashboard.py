@@ -19,7 +19,7 @@ from dash import Dash, dcc, html  # pip install dash (version 2.0.0 or higher)
 import dash_extensions as de
 from datetime import datetime
 import datetime as dt
-
+import time
 
 
 # Lotties: Emil at https://github.com/thedirtyfew/dash-extensions
@@ -51,7 +51,27 @@ def create_db_connection(host_name, user_name, user_password, db_name):
 pw = "Sentiment"
 
 connection = create_db_connection("database.cyg6qupmqicu.ap-southeast-2.rds.amazonaws.com", "admin", pw,
-                                  "SENTIMENT")
+                                  "HTL_SENTIMENT")
+
+
+
+# Stopword removal
+stopword = nltk.corpus.stopwords.words('english')
+
+words = set(nltk.corpus.words.words( ))
+def clean_text(text):
+    # Lower case
+    text = text.lower( )
+
+    text = re.split('\W+', text)  # tokenization
+
+    # Stopword removal
+    text = [word for word in text if word not in stopword]  # remove stopwords
+
+    # Remove non-english words / sentances
+    text = " ".join(w for w in text if w.lower( ) in words or not w.isalpha( ))
+
+    return text
 
 with urlopen('https://raw.githubusercontent.com/rowanhogan/australian-states/master/states.geojson') as response:
     counties = json.load(response)
@@ -82,7 +102,7 @@ neutral_sentiment = viz[viz['sentiment'] == 0]
 pos_sentiment['place_id'] = pos_sentiment['place'].map(state_id_map)
 neg_sentiment['place_id'] = neg_sentiment['place'].map(state_id_map)
 
-# df['cleaned_tweet'] = df['tweet'].apply(lambda x: clean_text(x))
+df['cleaned_tweet'] = df['tweet'].apply(lambda x: clean_text(x))
 # pos_sentiment['log_tweet'] = np.log(pos_sentiment['tweet'])
 # neg_sentiment['log_tweet'] = np.log(neg_sentiment['tweet'])
 
@@ -91,6 +111,7 @@ df = df[df.cleaned_tweet != '']
 # Create three Counter objects to store positive, negative and total counts
 positive_counts = Counter( )
 negative_counts = Counter( )
+neutral_counts = Counter( )
 total_counts = Counter( )
 
 positive_tweets = df[df['sentiment'] == 1].cleaned_tweet.values.tolist( )
@@ -107,13 +128,18 @@ for i in range(len(negative_tweets)):
         negative_counts[word] += 1
         total_counts[word] += 1
 
+for i in range(len(neutral_tweets)):
+    for word in neutral_tweets[i].split(" "):
+        neutral_counts[word] += 1
+        total_counts[word] += 1
+
 pos_neg_ratios = Counter( )
 
 # Calculate the ratios of positive and negative uses of the most common words
 # Consider words to be "common" if they've been used at least 100 times
 for term, cnt in list(total_counts.most_common( )):
-    if (cnt > 50):
-        pos_neg_ratio = positive_counts[term] / float(negative_counts[term] + 1)
+    if (cnt > 100):
+        pos_neg_ratio = positive_counts[term] / (float(negative_counts[term] + 1) + float(neutral_counts[term] + 1))
         pos_neg_ratios[term] = pos_neg_ratio
 
 # print("Pos-to-neg ratio for 'the' = {}".format(pos_neg_ratios["the"]))
@@ -129,9 +155,9 @@ for word, ratio in pos_neg_ratios.most_common( ):
         pos_neg_ratios[word] = np.log(ratio)
 
 # print("Pos-to-neg ratio for 'the' = {}".format(pos_neg_ratios["the"]))
-# print("Pos-to-neg ratio for 'brilliant' = {}".format(pos_neg_ratios["health"]))
-# print("Pos-to-neg ratio for 'disgusting' = {}".format(pos_neg_ratios["mental"]))
-# print("Pos-to-neg ratio for 'suck' = {}".format(pos_neg_ratios["covid"]))
+# print("Pos-to-neg ratio for 'health' = {}".format(pos_neg_ratios["health"]))
+# print("Pos-to-neg ratio for 'mental' = {}".format(pos_neg_ratios["mental"]))
+# print("Pos-to-neg ratio for 'covid' = {}".format(pos_neg_ratios["covid"]))
 
 # words most frequently seen in a review with a "NEGATIVE" label
 neg_df = pd.DataFrame(list(reversed(pos_neg_ratios.most_common( )))[0:500])
@@ -146,7 +172,7 @@ pos_df = pd.DataFrame(pos_neg_ratios.most_common( )[:30])
 pos_df['freq'] = pos_df[0].apply(
     lambda x: dict(positive_counts.most_common( ))[x] if x in dict(positive_counts.most_common( )) else 0)
 
-stylecloud.gen_stylecloud(' '.join(positive_tweets + negative_tweets + neutral_tweets), colors=['#ecf0f1', '#3498db', '#e74c3c'],
+stylecloud.gen_stylecloud(' '.join(positive_tweets + negative_tweets + neutral_tweets), colors=['#ecf0f1', '#3498db', '#e74c3c'], size=1024,
                           background_color='#070914', icon_name='fas fa-hashtag', output_name='./assets/pos_cloud.png')
 
 
@@ -246,9 +272,19 @@ connection.close( )
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 # # ------------------------------------------------------------------------------
+
+
+
+def get_div(message):
+    return html.Div([message], className='ticker__item')
+
+
 # # App layout
 app.layout = dbc.Container([
     # First Row
+
+
+    
 
     dbc.Row([
         
@@ -268,10 +304,10 @@ app.layout = dbc.Container([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                        dbc.CardImg(src='./assets/HTL_LOGO.PNG')
+                        dbc.CardLink(dbc.CardImg(src='./assets/HTL_LOGO.PNG'), href='http://healthlab.edu.au/')
                 ], style={'background-color':'#070914'})
                 
-            ], style={'height':'200px', 'width':'200px', 'display': 'flow', 'background-color':'#070914', 'overflow': 'hidden'})
+            ], style={'height':'100%', 'width':'100%', 'display': 'flex', 'background-color':'#070914', 'overflow': 'hidden'})
         ], width=2),
 
 
@@ -279,27 +315,14 @@ app.layout = dbc.Container([
         dbc.Col([
             dbc.Card([
                 dbc.CardBody([
-                    html.Div([
+                    
                         html.H1("Twitter Health Sentiment Analysis",
-                                style={'fontFamily': "serif", 'margin-bottom': "0px", 'color': "black"}
+                                style={'margin-bottom':'10px', 'margin-top':'10px', 'color': "black"}
                                 )
-                    ], className='animate-character')
+                    
                 ])
             ], style={'borderRadius': '0px 25px 25px 0px',
                       'overflow': 'hidden', 'background': '#41B3A3'}),
-            
-            
-
-                
-        
-        # dbc.Card([
-            
-        #         html.Div([html.P("{}".format(' '.join(df.original_tweet.values.tolist()[:20])), style={'flex-shrink':'0'})], className='scroll-left')
-            
-        # ])
-
-
-                
             
         ],style={'margin-top': '40px'}, width=6),
 
@@ -308,26 +331,36 @@ app.layout = dbc.Container([
             dbc.Card([
 
                 dbc.CardBody([
-                    html.Div([
+                    
                         html.H6(children='Last updated at: {} '.format(df.date.max( ).split(' ')[0]),
-                                style={'margin-bottom': "0px", 'color': "white", "textAlign": "right"})
-                    ]),
-
-                    html.Div([
+                                style={'margin-bottom': "0px", 'color': "white", "textAlign": "justify", 'padding-top': '50px'}),
+                   
                         html.H6(children="Next update on: {} ".format(asd.date( )),
-                                style={'margin-bottom': "0px", 'color': "white", "textAlign": "right"})
-                    ])
+                                style={'margin-bottom': "0px", 'color': "white", "textAlign": "justify", 'padding-top': '10px'})
+                    
                 ], style={'background-color': '#070914'})
-            ], style={'background-color': '#070914'}),
-        ], width=4)
-    ], style={'background-color':'#070914'}, className='mb-4 mt-4'),
+            ], style={'height':'50%', 'background-color': '#070914'}),
+        ], width=2),
+
+
+        dbc.Col([
+            dbc.Card([
+
+                dbc.CardBody([
+                    dbc.CardImg(src='./assets/rmit.png')
+                    
+                ], style={'background-color': '#070914'})
+            ], style={'padding-bottom': '10px' , 'height':'100%', 'width':'100%', 'display': 'flex', 'background-color':'#070914', 'overflow': 'hidden'}),
+        ], width=2)
+
+    ], style={'background-color':'#070914'}),
 
     dbc.Row([
 
         dbc.Col([
             dbc.Card([
-                dbc.CardHeader(de.Lottie(options=options, width="60px", url=url),
-                               style={'borderRadius': '25px 0px 0px 0px', 'height':'5%',
+                dbc.CardHeader(
+                               style={'borderRadius': '25px 0px 0px 0px', 'height':'15%',
                                       'overflow': 'hidden', 'background': '#E8A87C'}),
 
                 dbc.CardBody([
@@ -346,8 +379,8 @@ app.layout = dbc.Container([
 
         dbc.Col([
             dbc.Card([
-                dbc.CardHeader(de.Lottie(options=options, width="60px", url=url2),
-                               style={'borderRadius': '25px 0px 0px 0px', 'height':'5%',
+                dbc.CardHeader(
+                               style={'borderRadius': '25px 0px 0px 0px', 'height':'15%',
                                       'overflow': 'hidden', 'background': '#E8A87C'}),
 
                 dbc.CardBody([
@@ -366,8 +399,8 @@ app.layout = dbc.Container([
 
         dbc.Col([
             dbc.Card([
-                dbc.CardHeader(de.Lottie(options=options, width="60px", url=url2),
-                               style={'borderRadius': '25px 0px 0px 0px', 'height':'5%',
+                dbc.CardHeader(
+                               style={'borderRadius': '25px 0px 0px 0px', 'height':'15%',
                                       'overflow': 'hidden', 'background': '#E8A87C'}),
 
                 dbc.CardBody([
@@ -386,8 +419,8 @@ app.layout = dbc.Container([
 
         dbc.Col([
             dbc.Card([
-                dbc.CardHeader(de.Lottie(options=options, width="60px", url=url3),
-                               style={'borderRadius': '25px 0px 0px 0px', 'height':'5%',
+                dbc.CardHeader(
+                               style={'borderRadius': '25px 0px 0px 0px', 'height':'15%',
                                       'overflow': 'hidden', 'background': '#E8A87C'}),
 
                 dbc.CardBody([
@@ -406,8 +439,8 @@ app.layout = dbc.Container([
 
         dbc.Col([
             dbc.Card([
-                dbc.CardHeader(de.Lottie(options=options, width="60px", url=url4),
-                               style={'borderRadius': '25px 0px 0px 0px', 'height':'5%',
+                dbc.CardHeader(
+                               style={'borderRadius': '25px 0px 0px 0px', 'height':'15%',
                                       'overflow': 'hidden', 'background': '#E8A87C'}),
 
                 dbc.CardBody([
@@ -415,8 +448,8 @@ app.layout = dbc.Container([
                                                            'color': "black",
                                                            'background-color': '#41B3A3'}),
                     html.H2(id='content-words', children='{}K'.format(round((sum(
-                        list(dict(positive_counts).values( ))) + sum(list(dict(negative_counts).values( )))) / 1000,
-                                                                            1)),
+                        list(dict(positive_counts).values( ))) + sum(list(dict(negative_counts).values( ))) + sum(
+                        list(dict(neutral_counts).values( )))) / 1000, 1)),
                             style={'textAlign': 'center',
                                    'color': "black",
                                    'background-color': '#41B3A3'})
@@ -424,6 +457,9 @@ app.layout = dbc.Container([
 
             ], style={'background-color': '#070914'})
         ], width=2, style={'background-color': '#070914'}),
+
+
+       
 
         
 
@@ -459,6 +495,10 @@ app.layout = dbc.Container([
     # Graph headlines (unigrams)
    dbc.Row([
        dbc.Col([
+
+        dbc.Card([
+
+        
         dbc.CardHeader([
             html.H4(" Top-20 Most common positive unigrams within positive tweets",
                     style={'padding': '8px', 'borderRadius': '0px 25px 0px 0px',
@@ -467,21 +507,23 @@ app.layout = dbc.Container([
         ]),
         
         dbc.CardBody([
-                dcc.Graph(style={'display': 'flex', 'width': '100%', 'height': '200%', 'font_color': 'white'},
+                dcc.Graph(style={'margin':'0' , 'display': 'flex', 'width': '100%', 'height': '200%', 'font_color': 'white'},
                             config={"displayModeBar": False, "showTips": False},
                             figure=uni_gram_graph(pos_df, 'Tealgrn'))
-            ], style={'background-color': '#070914', "outline": "solid #E8A87C"}),
+            ], style={'margin': '0', 'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'}),
 
-        dbc.Col([
-            dbc.Card([
-                dbc.CardBody([
+        ], style={'background-color': '#070914'}),
 
-                ],style={'background-color': '#070914'})
-            ],style={'background-color': '#070914'})
-        ],className='mt-4'),
+        # dbc.Col([
+        #     dbc.Card([
+        #         dbc.CardBody([
+
+        #         ],style={'background-color': '#070914'})
+        #     ],style={'background-color': '#070914'})
+        # ]),
 
         dbc.CardHeader([
-            html.H4(" Top-20 Most common positive Bi-grams within positive tweets",
+            html.H4("Top-20 Most common positive Bi-grams within positive tweets",
                     style={'padding': '15px', 'borderRadius': '0px 25px 0px 0px',
                             'overflow': 'hidden', 'background': '#E8A87C', 'color': "black",
                             'background-color': '#E8A87C', 'height': '72px'})
@@ -490,7 +532,7 @@ app.layout = dbc.Container([
                 dcc.Graph(style={'display': 'flex', 'width': '100%', 'height': '200%', 'font_color': 'white'},
                             config={"displayModeBar": False, "showTips": False},
                             figure=bigram_graph(df, 'Tealgrn', 'pos'))
-            ], style={'background-color': '#070914', "outline": "solid #E8A87C"})
+            ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'})
 
     ], style={'height': "10%"}, width=4),
 
@@ -507,7 +549,7 @@ app.layout = dbc.Container([
                     ]),
                     dbc.CardBody([
                     dbc.CardImg(src='./assets/pos_cloud.png')
-                ], style={'background-color': '#070914', "outline": "solid #E8A87C"})
+                ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'})
 
                 ], style={'background-color': '#070914'})
 
@@ -529,7 +571,7 @@ app.layout = dbc.Container([
             dcc.Graph(style={'display': 'flex', 'width': '100%', 'height': '200%', 'font_color': 'white'},
                         config={"displayModeBar": False, "showTips": False},
                         figure=uni_gram_graph(neg_df, 'Redor'))
-        ], style={'background-color': '#070914', "outline": "solid #E8A87C"}),
+        ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'}),
 
     
 
@@ -543,7 +585,7 @@ app.layout = dbc.Container([
             dcc.Graph(style={'display': 'flex', 'width': '100%', 'height': '200%', 'font_color': 'white'},
                         config={"displayModeBar": False, "showTips": False},
                         figure=bigram_graph(df, 'Redor', 'neg'))
-        ], style={'background-color': '#070914', "outline": "solid #E8A87C"}), 
+        ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'}), 
 
     
 
@@ -555,16 +597,18 @@ dbc.Row([
         dbc.CardBody([
             html.Div([
                 html.Div([
-                    html.Div(["hi there"], className='ticker__item'),
-                    html.Div(["sayonara"], className='ticker__item'),
-                    html.Div(["yo bye"], className='ticker__item'),
-                    html.Div(["take care"], className='ticker__item'),
+                    # html.Div([df.original_tweet.values.tolist()[0]], className='ticker__item'),
+                    # html.Div([df.original_tweet.values.tolist()[1]], className='ticker__item'),
+                    # html.Div([df.original_tweet.values.tolist()[2]], className='ticker__item'),
+                    # html.Div([df.original_tweet.values.tolist()[3]], className='ticker__item'),
 
+                    get_div(i)  for i in df.original_tweet.values.tolist()[:100]
+                    
                 ],  className='ticker')
-            ],  className='ticker-wrap'),
-        ])
-    ])
-])
+            ], style={'background-color': '#28195c'}, className='ticker-wrap'),
+        ],style={'background-color': '#28195c'})
+    ],style={'background-color': '#28195c'})
+], style={'display':'flex', 'background-color': '#28195c'})
 
 
    
