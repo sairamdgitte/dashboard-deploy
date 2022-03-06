@@ -349,12 +349,12 @@ app.layout = dbc.Container([
                                         html.Div([' hospital'], className='element'),
                                         html.Div([' doctor'], className='element'),
                                         html.Div([' emergency'], className='element'),
-                                        html.Div([' physician'], className='element'),
-                                        html.Div([' cardiologist'], className='element'),
-                                        html.Div([' mammogram'], className='element'),
-                                        html.Div([' oncologist'], className='element'),
+                                        html.Div([' physicians'], className='element'),
+                                        html.Div([' cardiology'], className='element'),
+                                        html.Div([' mammography '], className='element'),
+                                        html.Div([' oncology'], className='element'),
                                         html.Div([' cancer'], className='element'),
-                                        html.Div([' clinic'], className='element'),
+                                        html.Div([' clinics'], className='element'),
                                         # html.Div([' primary care'], className='element'),
                                 ], className='change_inner')
                             ], className='change_outer')
@@ -512,7 +512,7 @@ app.layout = dbc.Container([
 
         
 
-    ], style={'background-color':'#070914', 'height':'30%'}),
+    ], style={'background-color':'#070914', 'height':'30%'}, className='mb-4'),
 
     # Second Row
     dbc.Row([
@@ -591,7 +591,7 @@ app.layout = dbc.Container([
             dbc.Card([
                 
                     dbc.CardHeader([
-                        html.H4("What are people talking about?",
+                        html.H4("What are people talking about? (Healthcare)",
                                 style={'padding': '15px', 'borderRadius': '0px 25px 0px 0px',
                                     'overflow': 'hidden', 'color': "white",
                                     'background-color': '#28195c', 'height': '72px'}, className='header')

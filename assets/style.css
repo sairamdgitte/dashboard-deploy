@@ -244,8 +244,8 @@
 }
 .carousel .change_outer .change_inner {
   position: relative;
-  -webkit-animation: rotate 34s  infinite;
-  animation: rotate 34s  infinite;
+  -webkit-animation: rotate 40s  infinite;
+  animation: rotate 40s  infinite;
 }
 .carousel .change_outer .element {
   display: block;
