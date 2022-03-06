@@ -61,50 +61,56 @@
   }
 }
 .ticker-wrap {
-  position: fixed;
+  position:fixed;
   bottom: 0;
-  width: 200%;
+  width: 100%;
   overflow: hidden;
   height: 4rem;
   background-color: #28195c;
-  padding-left: 100px;
-  box-sizing: border-box;
+  padding-left: 10px;
+  box-sizing: content-box;
+  opacity: 0.8;
   
   
 }
 .ticker-wrap .ticker {
   display: inline-block;
-  height: 4rem;
-  line-height: 4rem;
+  height: 3rem;
+  line-height: 3rem;
   white-space: nowrap;
   padding-right: 100%;
-  box-sizing: border-box;
+  box-sizing: content-box;
   -webkit-animation-iteration-count: infinite;
   animation-iteration-count: infinite;
   -webkit-animation-timing-function: linear;
   animation-timing-function: linear;
   -webkit-animation-name: ticker;
   animation-name: ticker;
-  -webkit-animation-duration: 3000s;
-  animation-duration: 3000s;
+  -webkit-animation-duration: 10000s;
+  animation-duration: 10000s;
+  
   
 }
 .ticker-wrap .ticker__item {
   display: inline-block;
   padding: 0 2rem;
-  font-size: 2rem;
+  font-size: 1.75rem;
   color: white;
   
 }
-/* .ticker-wrap .ticker .ticker__item {
-  flex-shrink: 50;
-} */
+
 
 .ticker:hover { animation-play-state: paused; }
 
+.header {
+  height: 70%;
+}
 
-
-
+@import url("https://fonts.googleapis.com/css?family=Roboto:700");
+.title {
+  /* font-family: Roboto, 'Courier New', Courier, monospace; */
+  text-shadow: 2px 2px 2px #eee;
+}
 
 
 
@@ -226,7 +232,7 @@
   top: 0;
   right: 54.5%;
   height: 75px;
-  text-shadow: 2px 2px 2px #41B3A3;
+  text-shadow: 1px 1px 1px #41B3A3;
 }
 .carousel .change_outer {
   position: absolute;
@@ -249,125 +255,136 @@
 
 .element  {
   display: inline-block;
-  font-size: 1rem;
+  font-size: 2rem;
+  white-space: pre-wrap;
 }
 .pre {
   display: inline-block;
-  font-size: 1rem;
+  margin: 15px 0;
+  font-size: 2rem;
   color: #41B3A3;
+  white-space: pre-wrap;
+  line-height:28px;
+  white-space:nowrap;
 }
 
 @-webkit-keyframes rotate {
-  0%, 2.5% {
+  0%, 3% {
     transform: translateY(0);
   }
-  5%, 7.5% {
+  5.5%, 8.5% {
     transform: translateY(-75px);
   }
-  10%, 12.5% {
+  11.5%, 14.5% {
     transform: translateY(-150px);
   }
-  15%, 17.5% {
+  17%, 20% {
     transform: translateY(-225px);
   }
-  20%, 22.5% {
+  22.5%, 25.5% {
     transform: translateY(-300px);
   }
-  25%, 27.5% {
+  28%, 31% {
     transform: translateY(-375px);
   }
-  30%, 32.5% {
+  33.5%, 36.5% {
     transform: translateY(-450px);
   }
-  35%, 37.5% {
+  39%, 42% {
     transform: translateY(-525px);
   }
-  40%, 42.5% {
+  44.5%, 47.5% {
     transform: translateY(-600px);
   }
-  45%, 47.5% {
+  50%, 53% {
     transform: translateY(-675px);
   }
-  50%, 52.5% {
+  55.5%, 58.5% {
     transform: translateY(-750px);
   }
-  55%, 57.5% {
+  61%, 64% {
     transform: translateY(-825px);
   }
-  60%, 62.5% {
+  66.5%, 69.5% {
     transform: translateY(-900px);
   }
-  65%, 67.5% {
+  72%, 75% {
     transform: translateY(-975px);
   }
-  70%, 72.5% {
+  77.5%, 80.5% {
     transform: translateY(-1050px);
   }
-  75%, 77.5% {
+  83%, 86% {
     transform: translateY(-1125px);
   }
-  80%, 82.5% {
+  88.5%, 91.5% {
     transform: translateY(-1200px);
   }
-  100% {
+  94%, 97% {
     transform: translateY(-1275px);
+  }
+  100% {
+    transform: translateY(-1350px);
   }
   
 }
 
 @keyframes rotate {
-  0%, 2.5% {
+  0%, 3% {
     transform: translateY(0);
   }
-  5%, 7.5% {
+  5.5%, 8.5% {
     transform: translateY(-75px);
   }
-  10%, 12.5% {
+  11.5%, 14.5% {
     transform: translateY(-150px);
   }
-  15%, 17.5% {
+  17%, 20% {
     transform: translateY(-225px);
   }
-  20%, 22.5% {
+  22.5%, 25.5% {
     transform: translateY(-300px);
   }
-  25%, 27.5% {
+  28%, 31% {
     transform: translateY(-375px);
   }
-  30%, 32.5% {
+  33.5%, 36.5% {
     transform: translateY(-450px);
   }
-  35%, 37.5% {
+  39%, 42% {
     transform: translateY(-525px);
   }
-  40%, 42.5% {
+  44.5%, 47.5% {
     transform: translateY(-600px);
   }
-  45%, 47.5% {
+  50%, 53% {
     transform: translateY(-675px);
   }
-  50%, 52.5% {
+  55.5%, 58.5% {
     transform: translateY(-750px);
   }
-  55%, 57.5% {
+  61%, 64% {
     transform: translateY(-825px);
   }
-  60%, 62.5% {
+  66.5%, 69.5% {
     transform: translateY(-900px);
   }
-  65%, 67.5% {
+  72%, 75% {
     transform: translateY(-975px);
   }
-  70%, 72.5% {
+  77.5%, 80.5% {
     transform: translateY(-1050px);
   }
-  75%, 77.5% {
+  83%, 86% {
     transform: translateY(-1125px);
   }
-  80%, 82.5% {
+  88.5%, 91.5% {
     transform: translateY(-1200px);
   }
-  100% {
+  94%, 97% {
     transform: translateY(-1275px);
+  }
+  100% {
+    transform: translateY(-1350px);
   }
 }
