@@ -55,23 +55,23 @@ connection = create_db_connection("database.cyg6qupmqicu.ap-southeast-2.rds.amaz
 
 
 
-# Stopword removal
-stopword = nltk.corpus.stopwords.words('english')
+# # Stopword removal
+# stopword = nltk.corpus.stopwords.words('english')
 
-words = set(nltk.corpus.words.words( ))
-def clean_text(text):
-    # Lower case
-    text = text.lower( )
+# words = set(nltk.corpus.words.words( ))
+# def clean_text(text):
+#     # Lower case
+#     text = text.lower( )
 
-    text = re.split('\W+', text)  # tokenization
+#     text = re.split('\W+', text)  # tokenization
 
-    # Stopword removal
-    text = [word for word in text if word not in stopword]  # remove stopwords
+#     # Stopword removal
+#     text = [word for word in text if word not in stopword]  # remove stopwords
 
-    # Remove non-english words / sentances
-    text = " ".join(w for w in text if w.lower( ) in words or not w.isalpha( ))
+#     # Remove non-english words / sentances
+#     text = " ".join(w for w in text if w.lower( ) in words or not w.isalpha( ))
 
-    return text
+#     return text
 
 with urlopen('https://raw.githubusercontent.com/rowanhogan/australian-states/master/states.geojson') as response:
     counties = json.load(response)
@@ -102,11 +102,11 @@ neutral_sentiment = viz[viz['sentiment'] == 0]
 pos_sentiment['place_id'] = pos_sentiment['place'].map(state_id_map)
 neg_sentiment['place_id'] = neg_sentiment['place'].map(state_id_map)
 
-df['cleaned_tweet'] = df['tweet'].apply(lambda x: clean_text(x))
+# df['cleaned_tweet'] = df['tweet'].apply(lambda x: clean_text(x))
 # pos_sentiment['log_tweet'] = np.log(pos_sentiment['tweet'])
 # neg_sentiment['log_tweet'] = np.log(neg_sentiment['tweet'])
 
-df = df[df.cleaned_tweet != '']
+df = df[df.tweet != '']
 
 # Create three Counter objects to store positive, negative and total counts
 positive_counts = Counter( )
@@ -114,9 +114,9 @@ negative_counts = Counter( )
 neutral_counts = Counter( )
 total_counts = Counter( )
 
-positive_tweets = df[df['sentiment'] == 1].cleaned_tweet.values.tolist( )
-negative_tweets = df[df['sentiment'] == -1].cleaned_tweet.values.tolist( )
-neutral_tweets = df[df['sentiment'] == 0].cleaned_tweet.values.tolist( )
+positive_tweets = df[df['sentiment'] == 1].tweet.values.tolist( )
+negative_tweets = df[df['sentiment'] == -1].tweet.values.tolist( )
+neutral_tweets = df[df['sentiment'] == 0].tweet.values.tolist( )
 
 for i in range(len(positive_tweets)):
     for word in positive_tweets[i].split(" "):
@@ -142,10 +142,6 @@ for term, cnt in list(total_counts.most_common( )):
         pos_neg_ratio = positive_counts[term] / (float(negative_counts[term] + 1) + float(neutral_counts[term] + 1))
         pos_neg_ratios[term] = pos_neg_ratio
 
-# print("Pos-to-neg ratio for 'the' = {}".format(pos_neg_ratios["the"]))
-# print("Pos-to-neg ratio for 'health' = {}".format(pos_neg_ratios["health"]))
-# print("Pos-to-neg ratio for 'mental' = {}".format(pos_neg_ratios["mental"]))
-# print("Pos-to-neg ratio for 'covid' = {}".format(pos_neg_ratios["covid"]))
 
 # Convert ratios to logs
 for word, ratio in pos_neg_ratios.most_common( ):
@@ -154,23 +150,31 @@ for word, ratio in pos_neg_ratios.most_common( ):
     else:
         pos_neg_ratios[word] = np.log(ratio)
 
-# print("Pos-to-neg ratio for 'the' = {}".format(pos_neg_ratios["the"]))
-# print("Pos-to-neg ratio for 'health' = {}".format(pos_neg_ratios["health"]))
-# print("Pos-to-neg ratio for 'mental' = {}".format(pos_neg_ratios["mental"]))
-# print("Pos-to-neg ratio for 'covid' = {}".format(pos_neg_ratios["covid"]))
+negative_intensity = reversed(pos_neg_ratios.most_common( )[:30])
+positive_intensity = pos_neg_ratios.most_common( )[:30]
+
+del pos_neg_ratios
+
+
+total_words = sum(list(dict(positive_counts).values())) + sum(list(dict(negative_counts).values())) + sum(list(dict(neutral_counts).values()))
+
+del positive_counts
+del negative_counts
+del neutral_counts
 
 # words most frequently seen in a review with a "NEGATIVE" label
-neg_df = pd.DataFrame(list(reversed(pos_neg_ratios.most_common( )))[0:500])
+neg_df = pd.DataFrame(list(negative_intensity))
 
-neg_df['freq'] = neg_df[0].apply(lambda x: dict(negative_counts.most_common( ))[x])
+
+neg_df['freq'] = neg_df[0].apply(lambda x: dict(total_counts)[x])
 
 neg_df = neg_df.iloc[:30, :].set_index(0)
 
 neg_df = neg_df.reset_index( )
 
-pos_df = pd.DataFrame(pos_neg_ratios.most_common( )[:30])
+pos_df = pd.DataFrame(positive_intensity)
 pos_df['freq'] = pos_df[0].apply(
-    lambda x: dict(positive_counts.most_common( ))[x] if x in dict(positive_counts.most_common( )) else 0)
+    lambda x: dict(positive_intensity)[x] if x in dict(positive_intensity) else 0)
 
 stylecloud.gen_stylecloud(' '.join(positive_tweets + negative_tweets + neutral_tweets), colors=['#41B3A3', '#9d3f54'], size=(1024, 700),
                           background_color='#070914', icon_name='fas fa-hashtag', output_name='./assets/pos_cloud.png')
@@ -221,7 +225,7 @@ def uni_gram_graph(df, color_name):
     return bar_fig
 
 
-def bigram_graph(df, color_name, sentiment='pos'):
+def data_for_bigram(df, sentiment='pos'):
     if sentiment == 'pos':
         df1 = df[df['sentiment'] == 1]
     else:
@@ -240,7 +244,15 @@ def bigram_graph(df, color_name, sentiment='pos'):
 
     freq_count_df[0] = freq_count_df[0].apply(lambda x: x[0] + '-' + x[1])
 
-    bigram_bar_fig = px.bar(freq_count_df,
+    del flat_list, bgs, freq_count
+
+    return freq_count_df
+
+
+def bigram_graph(df, color_name, sentiment='pos'):
+    
+
+    bigram_bar_fig = px.bar(df,
                             x=1, y=0, orientation='h', text=1, color=1, color_continuous_scale=color_name,
                             labels={
                                 "0": "Bi-grams",
@@ -262,13 +274,26 @@ def bigram_graph(df, color_name, sentiment='pos'):
 
 
 
+pos_bigram_data = data_for_bigram(df, sentiment='pos')
+neg_bigram_data = data_for_bigram(df, sentiment='neg')
+
+max_date = df.date.max( )
 asd = datetime.fromisoformat(df.date.max( )) + dt.timedelta(days=1)
 today = datetime.today( )
 
 connection.close( )
 
+len_positive_tweets = len(positive_tweets)
+len_negative_tweets = len(negative_tweets)
+len_neutral_tweets = len(neutral_tweets)
+
+tickerdata = df.original_tweet.values.tolist()[:500]
 
 
+del positive_tweets
+del negative_tweets
+del neutral_tweets
+del df
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 # # ------------------------------------------------------------------------------
@@ -289,17 +314,6 @@ app.layout = dbc.Container([
     dbc.Row([
         
     dbc.Row([
-
-
-        # First row first col
-        # dbc.Col([
-        #     dbc.Card([
-        #         dbc.CardBody([
-        #                 de.Lottie(options=options1, width="100%", url='./assets/HTL_LOGO.json')
-        #         ], style={'background-color':'#070914'})
-                
-        #     ], style={'height':'200px', 'width':'200px', 'display': 'flow', 'background-color':'#070914', 'overflow': 'hidden'})
-        # ], width=2),
 
         dbc.Col([
             dbc.Card([
@@ -395,7 +409,7 @@ app.layout = dbc.Container([
                                                       'color': "black",
                                                       'background-color': '#41B3A3'}),
                     html.H2(id='content-positive', children='{}%'.format(
-                        round(100 * (len(positive_tweets) / (len(positive_tweets) + len(neutral_tweets) + len(negative_tweets))))),
+                        round(100 * (len_positive_tweets) / (len_positive_tweets + len_neutral_tweets + len_negative_tweets))),
                             style={'textAlign': 'center',
                                    'color': "black",
                                    'background-color': '#41B3A3'})
@@ -415,7 +429,7 @@ app.layout = dbc.Container([
                                                       'color': "black",
                                                       'background-color': '#41B3A3'}),
                     html.H2(id='content-negative', children='{}%'.format(
-                        round(100 * (len(negative_tweets) / (len(positive_tweets) + len(neutral_tweets) + len(negative_tweets))))),
+                        round(100 * (len_negative_tweets) / (len_positive_tweets + len_neutral_tweets + len_negative_tweets))),
                             style={'textAlign': 'center',
                                    'color': "black",
                                    'background-color': '#41B3A3'})
@@ -435,7 +449,7 @@ app.layout = dbc.Container([
                                                       'color': "black",
                                                       'background-color': '#41B3A3'}),
                     html.H2(id='content-neutral', children='{}%'.format(
-                        round(100 * (len(neutral_tweets) / (len(positive_tweets) + len(neutral_tweets) + len(negative_tweets))))),
+                        round(100 * (len_neutral_tweets) / (len_positive_tweets + len_neutral_tweets + len_negative_tweets))),
                             style={'textAlign': 'center',
                                    'color': "black",
                                    'background-color': '#41B3A3'})
@@ -455,7 +469,7 @@ app.layout = dbc.Container([
                                                              'color': "black",
                                                              'background-color': '#41B3A3'}),
                     html.H2(id='content-tweets',
-                            children='{}K'.format(round((len(positive_tweets) + len(negative_tweets) + len(neutral_tweets)) / 1000, 1)),
+                            children='{}K'.format(round((len_positive_tweets + len_negative_tweets + len_neutral_tweets)) / 1000, 1),
                             style={'textAlign': 'center',
                                    'color': "black",
                                    'background-color': '#41B3A3'})
@@ -474,9 +488,7 @@ app.layout = dbc.Container([
                     html.H6("Total Words Analyzed", style={'textAlign': 'center',
                                                            'color': "black",
                                                            'background-color': '#41B3A3'}),
-                    html.H2(id='content-words', children='{}K'.format(round((sum(
-                        list(dict(positive_counts).values( ))) + sum(list(dict(negative_counts).values( ))) + sum(
-                        list(dict(neutral_counts).values( )))) / 1000, 1)),
+                    html.H2(id='content-words', children='{}K'.format(round(total_words, 2)/1000),
                             style={'textAlign': 'center',
                                    'color': "black",
                                    'background-color': '#41B3A3'})
@@ -491,7 +503,7 @@ app.layout = dbc.Container([
                dbc.CardBody([
                    html.Div([html.Div([
                     html.Div([
-                       html.Span(['Last updated: {} '.format(df.date.max( ).split(' ')[0])]),
+                       html.Span(['Last updated: {} '.format(max_date.split(' ')[0])]),
              
                    ])
                   
@@ -563,13 +575,6 @@ app.layout = dbc.Container([
 
         ], style={'background-color': '#070914'}),
 
-        # dbc.Col([
-        #     dbc.Card([
-        #         dbc.CardBody([
-
-        #         ],style={'background-color': '#070914'})
-        #     ],style={'background-color': '#070914'})
-        # ]),
 
         dbc.CardHeader([
             html.H4("Top-20 Most common positive Bi-grams within positive tweets",
@@ -580,7 +585,7 @@ app.layout = dbc.Container([
         dbc.CardBody([
                 dcc.Graph(style={'display': 'flex', 'width': '100%', 'height': '200%', 'font_color': 'white'},
                             config={"displayModeBar": False, "showTips": False},
-                            figure=bigram_graph(df, 'Tealgrn', 'pos'))
+                            figure=bigram_graph(pos_bigram_data, 'Tealgrn', 'pos'))
             ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'})
 
     ], style={'height': "10%"}, width=4),
@@ -632,7 +637,7 @@ app.layout = dbc.Container([
     dbc.CardBody([
             dcc.Graph(style={'display': 'flex', 'width': '100%', 'height': '200%', 'font_color': 'white'},
                         config={"displayModeBar": False, "showTips": False},
-                        figure=bigram_graph(df, 'Redor', 'neg'))
+                        figure=bigram_graph(neg_bigram_data, 'Redor', 'neg'))
         ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'}), 
 
     
@@ -645,12 +650,8 @@ dbc.Row([
         dbc.CardBody([
             html.Div([
                 html.Div([
-                    # html.Div([df.original_tweet.values.tolist()[0]], className='ticker__item'),
-                    # html.Div([df.original_tweet.values.tolist()[1]], className='ticker__item'),
-                    # html.Div([df.original_tweet.values.tolist()[2]], className='ticker__item'),
-                    # html.Div([df.original_tweet.values.tolist()[3]], className='ticker__item'),
 
-                    get_div(i)  for i in df.original_tweet.values.tolist()[:500]
+                    get_div(i)  for i in tickerdata
                     
                 ], className='ticker')
             ], style={'background-color': '#28195c'}, className='ticker-wrap'),
@@ -664,5 +665,5 @@ dbc.Row([
 
 if __name__ == '__main__':
 
-    app.run_server(debug=True, port=8050)
+    app.run_server(host='0.0.0.0', debug=True, port=8050)
 
