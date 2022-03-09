@@ -54,25 +54,6 @@ connection = create_db_connection("database.cyg6qupmqicu.ap-southeast-2.rds.amaz
                                   "HTL_SENTIMENT")
 
 
-
-# # Stopword removal
-# stopword = nltk.corpus.stopwords.words('english')
-
-# words = set(nltk.corpus.words.words( ))
-# def clean_text(text):
-#     # Lower case
-#     text = text.lower( )
-
-#     text = re.split('\W+', text)  # tokenization
-
-#     # Stopword removal
-#     text = [word for word in text if word not in stopword]  # remove stopwords
-
-#     # Remove non-english words / sentances
-#     text = " ".join(w for w in text if w.lower( ) in words or not w.isalpha( ))
-
-#     return text
-
 with urlopen('https://raw.githubusercontent.com/rowanhogan/australian-states/master/states.geojson') as response:
     counties = json.load(response)
 
@@ -165,9 +146,10 @@ del neutral_counts
 # words most frequently seen in a review with a "NEGATIVE" label
 neg_df = pd.DataFrame(list(negative_intensity))
 
-
+print(neg_df)
 neg_df['freq'] = neg_df[0].apply(lambda x: dict(total_counts)[x])
 
+del total_counts
 neg_df = neg_df.iloc[:30, :].set_index(0)
 
 neg_df = neg_df.reset_index( )
