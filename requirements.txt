@@ -58,6 +58,7 @@ requests==2.27.1
 schedule==1.1.0
 six==1.15.0
 soupsieve==2.3.1
+stylecloud==0.5.2
 tenacity==8.0.1
 termcolor==1.1.0
 tinycss==0.4

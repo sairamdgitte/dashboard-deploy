@@ -162,7 +162,6 @@ stylecloud.gen_stylecloud(' '.join(positive_tweets + negative_tweets + neutral_t
                           background_color='#070914', icon_name='fas fa-hashtag', output_name='./assets/pos_cloud.png')
 
 
-
 def update_graph(df, color_name, tweet):
     fig_Heterogeneity = px.choropleth_mapbox(df,
                                              locations="place_id",
