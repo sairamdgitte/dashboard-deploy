@@ -21,6 +21,9 @@ from datetime import datetime
 import datetime as dt
 import time
 
+import warnings
+warnings.filterwarnings("ignore")
+
 
 # Lotties: Emil at https://github.com/thedirtyfew/dash-extensions
 
@@ -131,7 +134,7 @@ for word, ratio in pos_neg_ratios.most_common( ):
     else:
         pos_neg_ratios[word] = np.log(ratio)
 
-negative_intensity = reversed(pos_neg_ratios.most_common( )[:30])
+negative_intensity = pos_neg_ratios.most_common( )[-30:]
 positive_intensity = pos_neg_ratios.most_common( )[:30]
 
 del pos_neg_ratios
@@ -146,7 +149,6 @@ del neutral_counts
 # words most frequently seen in a review with a "NEGATIVE" label
 neg_df = pd.DataFrame(list(negative_intensity))
 
-print(neg_df)
 neg_df['freq'] = neg_df[0].apply(lambda x: dict(total_counts)[x])
 
 del total_counts
@@ -450,7 +452,7 @@ app.layout = dbc.Container([
                                                              'color': "black",
                                                              'background-color': '#41B3A3'}),
                     html.H2(id='content-tweets',
-                            children='{}K'.format(round((len_positive_tweets + len_negative_tweets + len_neutral_tweets)) / 1000, 1),
+                            children='{}K'.format(round((len_positive_tweets + len_negative_tweets + len_neutral_tweets) / 1000)),
                             style={'textAlign': 'center',
                                    'color': "black",
                                    'background-color': '#41B3A3'})
@@ -469,7 +471,7 @@ app.layout = dbc.Container([
                     html.H6("Total Words Analyzed", style={'textAlign': 'center',
                                                            'color': "black",
                                                            'background-color': '#41B3A3'}),
-                    html.H2(id='content-words', children='{}K'.format(round(total_words, 2)/1000),
+                    html.H2(id='content-words', children='{}M'.format(round(total_words/1000000)),
                             style={'textAlign': 'center',
                                    'color': "black",
                                    'background-color': '#41B3A3'})
