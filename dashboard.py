@@ -134,8 +134,8 @@ for word, ratio in pos_neg_ratios.most_common( ):
     else:
         pos_neg_ratios[word] = np.log(ratio)
 
-negative_intensity = pos_neg_ratios.most_common( )[-30:]
-positive_intensity = pos_neg_ratios.most_common( )[:30]
+negative_intensity = pos_neg_ratios.most_common( )[-20:]
+positive_intensity = pos_neg_ratios.most_common( )[:20]
 
 del pos_neg_ratios
 
@@ -151,18 +151,20 @@ neg_df = pd.DataFrame(list(negative_intensity))
 
 neg_df['freq'] = neg_df[0].apply(lambda x: dict(total_counts)[x])
 
-del total_counts
-neg_df = neg_df.iloc[:30, :].set_index(0)
+# del total_counts
+neg_df = neg_df.iloc[:20, :].set_index(0)
 
 neg_df = neg_df.reset_index( )
 
 pos_df = pd.DataFrame(positive_intensity)
 pos_df['freq'] = pos_df[0].apply(
-    lambda x: dict(positive_intensity)[x] if x in dict(positive_intensity) else 0)
+    lambda x: dict(total_counts)[x] if x in dict(total_counts) else 0)
 
 stylecloud.gen_stylecloud(' '.join(positive_tweets + negative_tweets + neutral_tweets), colors=['#41B3A3', '#9d3f54'], size=(1024, 700),
                           background_color='#070914', icon_name='fas fa-hashtag', output_name='./assets/pos_cloud.png')
 
+# print(pos_df)
+# print(neg_df)
 
 def update_graph(df, color_name, tweet):
     fig_Heterogeneity = px.choropleth_mapbox(df,
@@ -270,7 +272,7 @@ len_positive_tweets = len(positive_tweets)
 len_negative_tweets = len(negative_tweets)
 len_neutral_tweets = len(neutral_tweets)
 
-tickerdata = df.original_tweet.values.tolist()[:500]
+tickerdata = df.original_tweet.values.tolist()[-500:]
 
 
 del positive_tweets
@@ -471,7 +473,7 @@ app.layout = dbc.Container([
                     html.H6("Total Words Analyzed", style={'textAlign': 'center',
                                                            'color': "black",
                                                            'background-color': '#41B3A3'}),
-                    html.H2(id='content-words', children='{}M'.format(round(total_words/1000000)),
+                    html.H2(id='content-words', children='{}M'.format(round(total_words/1000000,2)),
                             style={'textAlign': 'center',
                                    'color': "black",
                                    'background-color': '#41B3A3'})
