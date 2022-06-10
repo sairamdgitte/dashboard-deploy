@@ -152,7 +152,7 @@ neg_df = pd.DataFrame(list(negative_intensity))
 neg_df['freq'] = neg_df[0].apply(lambda x: dict(total_counts)[x])
 
 # del total_counts
-neg_df = neg_df.iloc[:20, :].set_index(0)
+neg_df = neg_df.iloc[:10, :].set_index(0)
 
 neg_df = neg_df.reset_index( )
 
@@ -162,9 +162,9 @@ pos_df['freq'] = pos_df[0].apply(
 
 stylecloud.gen_stylecloud(' '.join(positive_tweets + negative_tweets + neutral_tweets), colors=['#41B3A3', '#9d3f54'], size=(1024, 700),
                           background_color='#070914', icon_name='fas fa-hashtag', output_name='./assets/pos_cloud.png')
-
-# print(pos_df)
-# print(neg_df)
+pos_df = pos_df.iloc[:10, :]
+print(pos_df)
+print(neg_df)
 
 def update_graph(df, color_name, tweet):
     fig_Heterogeneity = px.choropleth_mapbox(df,
