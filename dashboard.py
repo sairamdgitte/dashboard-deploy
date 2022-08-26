@@ -20,6 +20,11 @@ import dash_extensions as de
 from datetime import datetime
 import datetime as dt
 import time
+import itertools
+import dash_daq as daq
+from wordcloud import WordCloud, ImageColorGenerator
+from PIL import Image
+import matplotlib.pyplot as plt
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -160,25 +165,69 @@ pos_df = pd.DataFrame(positive_intensity)
 pos_df['freq'] = pos_df[0].apply(
     lambda x: dict(total_counts)[x] if x in dict(total_counts) else 0)
 
-stylecloud.gen_stylecloud(' '.join(positive_tweets + negative_tweets + neutral_tweets), colors=['#41B3A3', '#9d3f54'], size=(1024, 700),
-                          background_color='#070914', icon_name='fas fa-hashtag', output_name='./assets/pos_cloud.png')
-pos_df = pos_df.iloc[:10, :]
-print(pos_df)
-print(neg_df)
 
-def update_graph(df, color_name, tweet):
-    fig_Heterogeneity = px.choropleth_mapbox(df,
+df['hashtags'] = df.original_tweet.apply(lambda x: list(set(re.findall('#[A-Za-z0-9_]+', x) )) if len(set(re.findall('#[A-Za-z0-9_]+', x) )) > 0 else [])
+pos_tags = list(itertools.chain(*df[df['sentiment']==1]['hashtags'].to_list()))
+neg_tags = list(itertools.chain(*df[df['sentiment']==-1]['hashtags'].to_list()))
+
+stylecloud.gen_stylecloud(' '.join(pos_tags + neg_tags), colors=['#41B3A3', '#9d3f54'], size=(1024, 800),
+                          background_color='#070914', icon_name='fas fa-hashtag', output_name='./assets/pos_cloud.png')
+
+df['mentions'] = df.original_tweet.apply(lambda x: list(set(re.findall('@[A-Za-z0-9_]+', x) )) if len(set(re.findall('@[A-Za-z0-9_]+', x) )) > 0 else [])
+# unique_mentions = len(set(list(itertools.chain(*df['mentions'].to_list()))))
+pos_mentions = list(itertools.chain(*df[df['sentiment']==1]['mentions'].to_list()))
+neg_mentions = list(itertools.chain(*df[df['sentiment']==-1]['mentions'].to_list()))
+stylecloud.gen_stylecloud(' '.join(pos_mentions + neg_mentions), colors=['#41B3A3', '#9d3f54'], size=(1024, 800),
+                          background_color='#070914', icon_name='fas fa-at', output_name='./assets/at_cloud.png')
+# print(image_colors)
+pos_df = pos_df.iloc[:10, :]
+# print(pos_df)
+# print(neg_df)
+
+# def update_graph(df, color_name, tweet):
+#     print(df)
+#     fig_Heterogeneity = px.choropleth_mapbox(df,
+#                                              locations="place_id",
+#                                              geojson=counties,
+#                                              color="tweet",
+#                                              mapbox_style="carto-darkmatter",  # carto-darkmatter",
+#                                              hover_name='place',
+#                                              hover_data={'place_id': False},
+#                                              opacity=0.8, color_continuous_midpoint=0,
+#                                              color_continuous_scale=eval('px.colors.sequential.' + color_name),
+#                                              labels={'EC': 'Environmental Heterogeneity'},
+#                                              center={"lat": -25.2744, "lon": 133.7751},
+#                                              range_color=(0, df.tweet.max( )),
+#                                              zoom=2,
+#                                              height=300)
+#     fig_Heterogeneity.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0}, paper_bgcolor="#262626", plot_bgcolor='#262626',
+#                                     font={
+#                                         "color": "white"})
+#     fig_Heterogeneity.update_geos(fitbounds="locations", visible=False)
+
+#     return fig_Heterogeneity
+def graph(df, color_name):
+    df_state_sentiment = pd.DataFrame()
+    for i in df.place.unique():
+        df_state_sentiment = pd.concat([df_state_sentiment, df[df['place']==i]['sentiment'].value_counts().to_frame().rename(columns={'sentiment': i}).T]) 
+    df_state_sentiment['total_sentiment'] = -df_state_sentiment[-1]+df_state_sentiment[1]
+    df_state_sentiment['percentage'] = (df_state_sentiment['total_sentiment']/df_state_sentiment['total_sentiment'].sum()*100)
+    df_state_sentiment.reset_index(inplace=True)
+    print(df_state_sentiment)
+    df_state_sentiment['place_id'] = df_state_sentiment['index'].map(state_id_map)
+
+    fig_Heterogeneity = px.choropleth_mapbox(df_state_sentiment,
                                              locations="place_id",
                                              geojson=counties,
-                                             color="tweet",
+                                             color="percentage",
                                              mapbox_style="carto-darkmatter",  # carto-darkmatter",
-                                             hover_name='place',
+                                             hover_name='index',
                                              hover_data={'place_id': False},
                                              opacity=0.8, color_continuous_midpoint=0,
                                              color_continuous_scale=eval('px.colors.sequential.' + color_name),
                                              labels={'EC': 'Environmental Heterogeneity'},
                                              center={"lat": -25.2744, "lon": 133.7751},
-                                             range_color=(0, df.tweet.max( )),
+                                             range_color=(0, 100),
                                              zoom=2,
                                              height=300)
     fig_Heterogeneity.update_layout(margin={"r": 0, "t": 0, "l": 0, "b": 0}, paper_bgcolor="#262626", plot_bgcolor='#262626',
@@ -187,7 +236,6 @@ def update_graph(df, color_name, tweet):
     fig_Heterogeneity.update_geos(fitbounds="locations", visible=False)
 
     return fig_Heterogeneity
-
 
 def uni_gram_graph(df, color_name):
     bar_fig = px.bar(df[[0, 'freq']].sort_values(by='freq', ascending=True),
@@ -198,7 +246,7 @@ def uni_gram_graph(df, color_name):
                          "freq": "Frequency",
                          "freq": "Frequency"
                      },
-                     height=200
+                    height=150
                      )
 
     bar_fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
@@ -244,7 +292,7 @@ def bigram_graph(df, color_name, sentiment='pos'):
                                 "1": "Frequency",
                                 "1": "Frequency"
                             },
-                            height=200
+                            height=150
                             )
 
     bigram_bar_fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
@@ -254,11 +302,114 @@ def bigram_graph(df, color_name, sentiment='pos'):
                                  font={
                                      "color": "white"
                                  })
-
+   
     return bigram_bar_fig
 
+def pos_area(df):
+    df['date'] = df.date.apply(lambda x: x.split(' ')[0])
+    df_date = df.groupby(['date', 'sentiment']).count( )
+
+    df_date = df_date.reset_index( )
+
+    df_date['sentiment'] = df_date['sentiment'].map({0: 'Neutral', 1: 'Positive', -1: 'Negative'})
+    area_fig = px.area(df_date, x="date", y="tweet", color="sentiment", line_group="sentiment",
+                       labels={
+                           "tweet": "No. of tweets",
+                           "date": "Dates",
+                           "sentiment": "Sentiment"
+                       },
+                       height= 250
+                       )
+
+    area_fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), uniformtext_minsize=4, uniformtext_mode='hide',
+                                 plot_bgcolor='#070914', paper_bgcolor='#070914',
+                                 font={
+                                     "color": "white"
+                                 })
+
+    return area_fig
+
+def stacked_bar(df):
+    df['sentiment'] = df['sentiment'].map({0: 'Neutral', -1: 'Negative', 1: 'Positive'})
+    df['tweet'] = round(df['tweet']*100)
+    fig = px.bar(df, x="place", y="tweet", color="sentiment", color_discrete_sequence=['#9d3f54', '#90e0ef', '#41B3A3'], opacity=0.8, text='tweet', height= 250,
+                labels={
+                        "place": "States",
+                        "tweet": "Proportion",
+                        "sentiment": "Sentiment"
+                    },)
+
+    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), uniformtext_minsize=4, uniformtext_mode='hide',
+                                 plot_bgcolor='#070914', paper_bgcolor='#070914',
+                                 font={
+                                     "color": "white"
+                                 })
+    
+    return fig
+
+def motion_chart(df):
+    df['date'] = df.date.apply(lambda x: x.split(' ')[0])
+    df = df.groupby(['place', 'date']).count( )
+    df = df.reset_index( )
+ 
+    fig = px.scatter(df,x='date', y='tweet',animation_frame='date', 
+    animation_group='place',size="tweet", 
+    color='place',
+    hover_name='place', log_x=True, 
+    size_max=45,range_x=[200,150000], range_y=[10,100]
+    )
+    return fig
+
+def mentions(df):
+    df['mentions'] = df.original_tweet.apply(lambda x: list(set(re.findall('@[A-Za-z0-9_]+', x) )) if len(set(re.findall('@[A-Za-z0-9_]+', x) )) > 0 else [])
+    unique_mentions = len(set(list(itertools.chain(*df['mentions'].to_list()))))
+    return daq.LEDDisplay(
+    
+    label={'label':"Unique @mentions",
+    'style': {'color': 'white'}},
+    style={'padding-left': 100},
+    value=str(unique_mentions),
+    color="#41B3A3",
+    backgroundColor='#070914',
+    
+)
+
+def hashtags(df):
+    df['hashtags'] = df.original_tweet.apply(lambda x: list(set(re.findall('#[A-Za-z0-9_]+', x) )) if len(set(re.findall('#[A-Za-z0-9_]+', x) )) > 0 else [])
+    unique_hashtags = len(set(list(itertools.chain(*df['hashtags'].to_list()))))
+    return daq.LEDDisplay(
+    label={'label': "Unique #hashtags",
+    'style': {'color': 'white'}},
+    style={'padding-left': 40},
+    value=str(unique_hashtags),
+    color="#41B3A3",
+    backgroundColor='#070914'
+)
 
 
+def boxplots(df):
+    
+    df['sentiment'] = df['sentiment'].map({0: 'Neutral', -1: 'Negative', 1: 'Positive'})
+    df = df.replace({'place': {'Australian Capital Territory': 'ACT', 'New South Wales': 'NSW', 'Northern Territory': 'NT', 'Queensland': 'Qld', 'South Australia': 'SA', 'Tasmania': 'Tas', 'Victoria': 'Vic', 'Western Australia': 'WA'}})
+    df['words'] = df['tweet'].apply(lambda x: len(x.split(' ')))
+
+    
+    fig = px.box(df, x="place", y="words", color='sentiment', color_discrete_sequence=['#90e0ef', '#41B3A3', '#9d3f54'], notched=True, height= 250,
+                            labels={
+                                "place": "States",
+                                "words": "Word count",
+                                "sentiment": "Sentiment"
+                            },)
+    fig.update_layout(margin=dict(l=0, r=0, t=0, b=0), uniformtext_minsize=4, uniformtext_mode='hide',
+                                 plot_bgcolor='#070914', paper_bgcolor='#070914',
+                                 font={
+                                     "color": "white"
+                                 })
+    
+    return fig
+# 
+# boxplots(df)
+# print(px.data.tips())
 pos_bigram_data = data_for_bigram(df, sentiment='pos')
 neg_bigram_data = data_for_bigram(df, sentiment='neg')
 
@@ -273,12 +424,15 @@ len_negative_tweets = len(negative_tweets)
 len_neutral_tweets = len(neutral_tweets)
 
 tickerdata = df.original_tweet.values.tolist()[-500:]
+stacked_df = df.groupby(['place', 'sentiment']).count( ) / df.groupby(['place']).count( )
+stacked_df = stacked_df.drop('sentiment', axis=1).reset_index()
+stacked_df = stacked_df.replace({'place': {'Australian Capital Territory': 'ACT', 'New South Wales': 'NSW', 'Northern Territory': 'NT', 'Queensland': 'Qld', 'South Australia': 'SA', 'Tasmania': 'Tas', 'Victoria': 'Vic', 'Western Australia': 'WA'}})
 
 
 del positive_tweets
 del negative_tweets
 del neutral_tweets
-del df
+# del df
 
 app = Dash(__name__, external_stylesheets=[dbc.themes.LUX])
 # # ------------------------------------------------------------------------------
@@ -315,7 +469,7 @@ app.layout = dbc.Container([
             dbc.Card([
                 dbc.CardBody([
                     
-                        html.H1("Twitter Health Sentiment Analysis Dashboard",
+                        html.H1("Twitter Health Sentiment Analysis Dashboard (Australia YTD)",
                                 style={'margin-bottom':'10px', 'margin-top':'10px', 'color': "white"},
                                 className='title'
                                 )
@@ -324,7 +478,7 @@ app.layout = dbc.Container([
             ], style={'borderRadius': '0px 25px 25px 0px',
                       'overflow': 'hidden', 'background': '#28195c'}),
             
-        ],style={'margin-top': '40px'}, width=6),
+        ],style={'margin-top': '30px', 'margin-bottom': '10px'}, width=6),
 
         # First Row Second Col
         dbc.Col([
@@ -400,7 +554,7 @@ app.layout = dbc.Container([
                                    'background-color': '#41B3A3'})
                 ], style={'borderRadius': '0px 0px 25px 0px', 'overflow': 'hidden', 'background-color': '#41B3A3'})
 
-            ], style={'background-color': '#070914'})
+            ], style={'background-color': '#070914'}, className='stats-card')
         ], width=2, style={'background-color': '#070914'}),
 
         dbc.Col([
@@ -420,7 +574,7 @@ app.layout = dbc.Container([
                                    'background-color': '#41B3A3'})
                 ], style={'borderRadius': '0px 0px 25px 0px', 'overflow': 'hidden', 'background-color': '#41B3A3'})
 
-            ], style={'background-color': '#070914'})
+            ], style={'background-color': '#070914'}, className='stats-card')
         ], width=2, style={'background-color': '#070914'}),
 
         dbc.Col([
@@ -440,7 +594,7 @@ app.layout = dbc.Container([
                                    'background-color': '#41B3A3'})
                 ], style={'borderRadius': '0px 0px 25px 0px', 'overflow': 'hidden', 'background-color': '#41B3A3'})
 
-            ], style={'background-color': '#070914'})
+            ], style={'background-color': '#070914'}, className='stats-card')
         ], width=2, style={'background-color': '#070914'}),
 
         dbc.Col([
@@ -460,7 +614,7 @@ app.layout = dbc.Container([
                                    'background-color': '#41B3A3'})
                 ], style={'borderRadius': '0px 0px 25px 0px', 'overflow': 'hidden', 'background-color': '#41B3A3'})
 
-            ], style={'background-color': '#070914'})
+            ], style={'background-color': '#070914'}, className='stats-card')
         ], width=2, style={'background-color': '#070914'}),
 
         dbc.Col([
@@ -479,7 +633,7 @@ app.layout = dbc.Container([
                                    'background-color': '#41B3A3'})
                 ], style={'borderRadius': '0px 0px 25px 0px', 'overflow': 'hidden', 'background-color': '#41B3A3'})
 
-            ], style={'background-color': '#070914'})
+            ], style={'background-color': '#070914'}, className='stats-card')
         ], width=2, style={'background-color': '#070914'}),
 
 
@@ -509,39 +663,77 @@ app.layout = dbc.Container([
 
         
 
-    ], style={'background-color':'#070914', 'height':'30%'}, className='mb-4'),
+    ], style={'background-color':'#070914'}, className='sec-row'),
 
     # Second Row
+    # dbc.Row([
+    #     # Second Row First Col
+    #     dbc.Col([
+    #         dbc.Card([
+    #             dbc.CardBody([
+    #                 dcc.Graph(style={'margin': '0', 'display': 'flex'},
+    #                           config={"displayModeBar": False, "showTips": False},
+    #                           figure=update_graph(pos_sentiment, 'Tealgrn', 'Positive tweets'))
+    #             ], style={'background-color': '#070914'} )
+    #         ]),
+    #     ], width=6),
+        
+    #     dbc.Col([
+    #         dbc.Card([
+    #             dbc.CardBody([
+    #                 dcc.Graph(style={'margin': '0'},
+    #                           config={"displayModeBar": False, "showTips": False},
+    #                           figure=update_graph(neg_sentiment, 'Redor', 'Negative tweets'))
+    #             ],style={'background-color': '#070914'})
+    #         ]),
+    #     ], width=6),
+
+    # ], style={'background-color':'#070914'}),
+    ], style={'background-color': '#070914'}),
+    
     dbc.Row([
-        # Second Row First Col
         dbc.Col([
-            dbc.Card([
+        dbc.Card([
                 dbc.CardBody([
                     dcc.Graph(style={'margin': '0', 'display': 'flex'},
                               config={"displayModeBar": False, "showTips": False},
-                              figure=update_graph(pos_sentiment, 'Tealgrn', 'Positive tweets'))
+                              figure=graph(df, 'Tealgrn'))
                 ], style={'background-color': '#070914'} )
-            ]),
-        ], width=6),
+            ]),  
+        dbc.Card([
+                
+
+
+            dbc.CardHeader([
+                html.H4("Trending now...",
+                        style={'padding': '15px', 'borderRadius': '0px 25px 0px 0px',
+                            'overflow': 'hidden', 'color': "white",
+                            'background-color': '#28195c', 'height': '72px'}, className='header')
+            ], style={'height': '20%'}),
+            dbc.CardBody([
+            html.Div([dbc.CardImg(src='./assets/pos_cloud.png', style={'margin': '0px', 'height': '400px', 'background-color': '#070914'}), 
+            dbc.CardImg(src='./assets/at_cloud.png', style={'margin': '0px', 'height': '400px', 'background-color': '#070914'}) 
+            ], 
+            style={'padding': '0px', 'height': '50%','width': '50%', 'display': 'inline-flex', 'flex-direction': 'row'}),
         
-        dbc.Col([
-            dbc.Card([
-                dbc.CardBody([
-                    dcc.Graph(style={'margin': '0'},
-                              config={"displayModeBar": False, "showTips": False},
-                              figure=update_graph(neg_sentiment, 'Redor', 'Negative tweets'))
-                ],style={'background-color': '#070914'})
-            ]),
-        ], width=6),
+            
+        ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'}, className='word-cloud'),
 
-    ], style={'background-color':'#070914'}),
-    ], style={'background-color': '#070914'}),
-    
 
-    # Graph headlines (unigrams)
-   dbc.Row([
-       dbc.Col([
 
+        dbc.CardBody([
+                    html.Div(
+                        [
+                        hashtags(df), mentions(df)], style={'margin': '10px', 'padding': '0px', 'width': '20%', 'display': 'inline-flex', 'flex-direction': 'row'}
+                    )
+                    
+                ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'})
+
+
+            ], style={'background-color': '#070914'})
+    ], width=4),
+
+    dbc.Col([
         dbc.Card([
 
         
@@ -560,7 +752,9 @@ app.layout = dbc.Container([
 
         ], style={'background-color': '#070914'}),
 
+        dbc.Card([
 
+        
         dbc.CardHeader([
             html.H4("Top-20 Most common positive Bi-grams within positive tweets",
                     style={'padding': '15px', 'borderRadius': '0px 25px 0px 0px',
@@ -573,47 +767,61 @@ app.layout = dbc.Container([
                             figure=bigram_graph(pos_bigram_data, 'Tealgrn', 'pos'))
             ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'})
 
-    ], style={'height': "10%"}, width=4),
+        ], style={'background-color': '#070914'}),
 
-
-    
-    dbc.Col([
-            dbc.Card([
-                
-                    dbc.CardHeader([
-                        html.H4("What are people talking about? (Healthcare)",
-                                style={'padding': '15px', 'borderRadius': '0px 25px 0px 0px',
-                                    'overflow': 'hidden', 'color': "white",
-                                    'background-color': '#28195c', 'height': '72px'}, className='header')
-                    ]),
-                    dbc.CardBody([
-                    dbc.CardImg(src='./assets/pos_cloud.png')
+        dbc.Card([
+            dbc.CardHeader([
+            html.H4("Tweets collected over time",
+                    style={'padding': '15px', 'borderRadius': '0px 25px 0px 0px',
+                        'overflow': 'hidden', 'color': "white",
+                        'background-color': '#28195c', 'height': '72px'}, className='header')
+        ], style={'opacity': '0.9'}),
+                dbc.CardBody([
+                    dcc.Graph(style={'margin': '0px', 'width': '100%', 'font_color': 'white'},
+                        config={"displayModeBar": False, "showTips": False}, figure=pos_area(df))
                 ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'})
 
+                # dbc.CardBody([
+                #     dcc.Graph(style={'margin': '0px', 'width': '100%', 'font_color': 'white'},
+                #         config={"displayModeBar": False, "showTips": False}, figure=motion_chart(df))
+                # ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'})
 
-            ], style={'background-color': '#070914'})
+                # dbc.CardBody([
+                #     html.Div(
+                #         [mentions(df),
+                #         hashtags(df)], style={'padding': '5px', 'width': '20%', 'display': 'inline-flex', 'flex-direction': 'row'}
+                #     )
+                    
+                # ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'})
 
-        ], width=4),
+                # dbc.CardBody([
+                #     dcc.Graph(style={'margin': '0px', 'width': '100%', 'font_color': 'white'},
+                #         config={"displayModeBar": False, "showTips": False}, figure=boxplots(df))
+                # ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'})
+                
+            ], style={'background-color': 'rgb(0,0,0)'}, className='area-graph')
 
-    
+
+    ], width=4),
 
     dbc.Col([
-    dbc.CardHeader([
+        dbc.Card([
+        dbc.CardHeader([
         html.H4("Top-20 Most common negative unigrams within negative tweets",
                 style={'padding': '8px', 'borderRadius': '0px 25px 0px 0px',
                         'overflow': 'hidden', 'color': "white",
                         'background-color': '#28195c', 'height': '72px'}, className='header')
-    ]),
+        ]),
 
-    dbc.CardBody([
-            dcc.Graph(style={'display': 'flex', 'width': '100%', 'height': '200%', 'font_color': 'white'},
+        dbc.CardBody([
+            dcc.Graph(style={'margin':'0', 'display': 'flex', 'width': '100%', 'height': '200%', 'font_color': 'white'},
                         config={"displayModeBar": False, "showTips": False},
                         figure=uni_gram_graph(neg_df, 'Redor'))
-        ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'}),
+        ], style={'margin': '0', 'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'}),
+        ], style={'background-color': '#070914'}),
 
-    
-
-    dbc.CardHeader([
+        dbc.Card([
+        dbc.CardHeader([
         html.H4(" Top-20 Most common negative Bi-grams within negative tweets",
                 style={'padding': '15px', 'borderRadius': '0px 25px 0px 0px',
                         'overflow': 'hidden', 'color': "white",
@@ -624,11 +832,128 @@ app.layout = dbc.Container([
                         config={"displayModeBar": False, "showTips": False},
                         figure=bigram_graph(neg_bigram_data, 'Redor', 'neg'))
         ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'}), 
+        ], style={'background-color': '#070914'}),
+
+        dbc.Card([
+        dbc.CardHeader([
+        html.H4(" Sentiment composition by states ",
+                style={'padding': '15px', 'borderRadius': '0px 25px 0px 0px',
+                        'overflow': 'hidden', 'color': "white",
+                        'background-color': '#28195c', 'height': '72px'}, className='header')
+    ]),
+    dbc.CardBody([
+            dcc.Graph(style={'display': 'flex', 'width': '100%', 'height': '200%', 'font_color': 'white'},
+                        config={"displayModeBar": False, "showTips": False},
+                        figure=stacked_bar(stacked_df))
+        ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'}), 
+        ], style={'background-color': '#070914'}),
+
+    
+    ], style={'width': 4}),
+
+    
+    
+    
+    ], style={'display': 'flex', 'background-color': '#070914'}),
+        
+    dbc.Row([
+        dbc.Card([
+
+        ], style={'background-color': '#070914'})
+    ], style={'display': 'flex', 'background-color': '#070914'}, className='content-dash'),
+    
+
+#     # Graph headlines (unigrams)
+#    dbc.Row([
+#        dbc.Col([
+
+#         dbc.Card([
+
+        
+#         dbc.CardHeader([
+#             html.H4(" Top-20 Most common positive unigrams within positive tweets",
+#                     style={'padding': '8px', 'borderRadius': '0px 25px 0px 0px',
+#                             'overflow': 'hidden', 'color': "white",
+#                             'background-color': '#28195c', 'height': '72px'}, className='header')
+#         ]),
+        
+#         dbc.CardBody([
+#                 dcc.Graph(style={'margin':'0' , 'display': 'flex', 'width': '100%', 'height': '200%', 'font_color': 'white'},
+#                             config={"displayModeBar": False, "showTips": False},
+#                             figure=uni_gram_graph(pos_df, 'Tealgrn'))
+#             ], style={'margin': '0', 'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'}),
+
+#         ], style={'background-color': '#070914'}),
+
+
+#         dbc.CardHeader([
+#             html.H4("Top-20 Most common positive Bi-grams within positive tweets",
+#                     style={'padding': '15px', 'borderRadius': '0px 25px 0px 0px',
+#                             'overflow': 'hidden', 'color': "white",
+#                             'background-color': '#28195c', 'height': '72px'}, className='header')
+#         ], style={'opacity': '0.9'}),
+#         dbc.CardBody([
+#                 dcc.Graph(style={'display': 'flex', 'width': '100%', 'height': '200%', 'font_color': 'white'},
+#                             config={"displayModeBar": False, "showTips": False},
+#                             figure=bigram_graph(pos_bigram_data, 'Tealgrn', 'pos'))
+#             ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'})
+
+#     ], style={'height': "10%"}, width=4),
+
+
+    
+    # dbc.Col([
+    #         dbc.Card([
+                
+    #                 dbc.CardHeader([
+    #                     html.H4("What are people talking about? (Healthcare)",
+    #                             style={'padding': '15px', 'borderRadius': '0px 25px 0px 0px',
+    #                                 'overflow': 'hidden', 'color': "white",
+    #                                 'background-color': '#28195c', 'height': '72px'}, className='header')
+    #                 ]),
+    #                 dbc.CardBody([
+    #                 dbc.CardImg(src='./assets/pos_cloud.png')
+    #             ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'})
+
+
+    #         ], style={'background-color': '#070914'})
+
+    #     ], width=4),
 
     
 
-    ],style={'height': "10%"}, width=4),
-   ], style={'background-color':'#070914'}),
+#     dbc.Col([
+#     dbc.CardHeader([
+#         html.H4("Top-20 Most common negative unigrams within negative tweets",
+#                 style={'padding': '8px', 'borderRadius': '0px 25px 0px 0px',
+#                         'overflow': 'hidden', 'color': "white",
+#                         'background-color': '#28195c', 'height': '72px'}, className='header')
+#     ]),
+
+#     dbc.CardBody([
+#             dcc.Graph(style={'display': 'flex', 'width': '100%', 'height': '200%', 'font_color': 'white'},
+#                         config={"displayModeBar": False, "showTips": False},
+#                         figure=uni_gram_graph(neg_df, 'Redor'))
+#         ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'}),
+
+    
+
+#     dbc.CardHeader([
+#         html.H4(" Top-20 Most common negative Bi-grams within negative tweets",
+#                 style={'padding': '15px', 'borderRadius': '0px 25px 0px 0px',
+#                         'overflow': 'hidden', 'color': "white",
+#                         'background-color': '#28195c', 'height': '72px'}, className='header')
+#     ]),
+#     dbc.CardBody([
+#             dcc.Graph(style={'display': 'flex', 'width': '100%', 'height': '200%', 'font_color': 'white'},
+#                         config={"displayModeBar": False, "showTips": False},
+#                         figure=bigram_graph(neg_bigram_data, 'Redor', 'neg'))
+#         ], style={'background-color': '#070914', "outline": "solid #E8A87C", 'outline-width': 'thin'}), 
+
+    
+
+#     ],style={'height': "10%"}, width=4),
+#    ], style={'background-color':'#070914'}),
 
 dbc.Row([
     dbc.Card([
@@ -639,10 +964,10 @@ dbc.Row([
                     get_div(i)  for i in tickerdata
                     
                 ], className='ticker')
-            ], style={'background-color': '#28195c'}, className='ticker-wrap'),
-        ],style={'background-color': '#28195c'})
-    ],style={'background-color': '#28195c'})
-], style={'display':'flex', 'background-color': '#28195c'})
+            ], style={'background-color': '#28195c', 'margin': '0px'}, className='ticker-wrap'),
+        ],style={'background-color': '#28195c', 'margin': '0px'})
+    ],style={'background-color': '#28195c', 'margin': '0px'})
+], style={'display':'flex', 'background-color': '#28195c', 'margin': '0px'})
 
 
    
