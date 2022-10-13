@@ -27,24 +27,22 @@
   }
 }
 .ticker-wrap {
-  position:fixed;
+  position: sticky;
   bottom: 0;
   width: 100%;
   overflow: hidden;
-  height: 4rem;
+  height: 2rem;
   background-color: #28195c;
-  padding-left: 10px;
+  padding-right: 10px;
   box-sizing: content-box;
   opacity: 0.8;
   
-  
 }
 .ticker-wrap .ticker {
-  display: inline-block;
-  height: 3rem;
-  line-height: 3rem;
+  display: inline-flex;
+  height: 2rem;
+  line-height: 2rem;
   white-space: nowrap;
-  padding-right: 100%;
   box-sizing: content-box;
   -webkit-animation-iteration-count: infinite;
   animation-iteration-count: infinite;
@@ -52,15 +50,15 @@
   animation-timing-function: linear;
   -webkit-animation-name: ticker;
   animation-name: ticker;
-  -webkit-animation-duration: 10000s;
+  -webkit-animation-duration: 1000s;
   animation-duration: 10000s;
   
   
 }
 .ticker-wrap .ticker__item {
-  display: inline-block;
-  padding: 0 2rem;
-  font-size: 1.75rem;
+  display: inline-flex;
+  padding: 0 0rem;
+  font-size: 1.5rem;
   color: white;
   
 }
@@ -68,8 +66,25 @@
 
 .ticker:hover { animation-play-state: paused; }
 
+.stats-card {
+  height: 80%;
+  margin-bottom: 0;
+}
+.sec-row {
+  margin-bottom: 10;
+  padding-bottom: 0px;
+}
+
+.word-cloud {
+  height: 100%;
+}
+/* .area-graph {
+  margin-top: 10px;
+  height: 1%;
+} */
 .header {
   height: 70%;
+  margin: 0%;
 }
 
 @import url("https://fonts.googleapis.com/css?family=Roboto:700");
@@ -103,7 +118,7 @@
 }
 .animated-title {
   color: #eee;
-  font-family: Roboto, Arial, sans-serif;
+  font-family:  'Arial Narrow', sans-serif;
   height: 20vmin;
   left: 50%;
   position: absolute;
@@ -354,3 +369,6 @@
     transform: translateY(-1350px);
   }
 }
+
+
+
